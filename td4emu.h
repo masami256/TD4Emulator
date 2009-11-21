@@ -7,8 +7,8 @@
 // TD4 has two registers which A register and B register.
 // Register size is 4 bit. 
 struct td4_registers {
-	u_int8_t reg_a:4;
-	u_int8_t reg_b:4;
+	u_int8_t reg_a;
+	u_int8_t reg_b;
 };
 
 // TD4 has only one flag register.
