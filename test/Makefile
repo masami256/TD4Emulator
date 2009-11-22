@@ -1,9 +1,10 @@
 CC = gcc
 
-CFLAGS = -g -Wall -O2
+CFLAGS = -g -Wall
 
 test_add = test_add
 test_mov = test_mov
+test_jmp = test_jmp
 
 objs = ../td4emu.o \
 	../td4_opcode.o \
@@ -12,7 +13,7 @@ objs = ../td4emu.o \
 	../td4_abort.o \
 	test_common.o
 
-all: $(test_add) $(test_mov)
+all: $(test_add) $(test_mov) $(test_jmp)
 
 $(test_add): $(objs) $(test_add).o
 	$(CC) $(objs) $(test_add).o -o $(test_add)
@@ -20,13 +21,18 @@ $(test_add): $(objs) $(test_add).o
 $(test_mov): $(objs) $(test_mov).o
 	$(CC) $(objs) $(test_mov).o -o $(test_mov)
 
+$(test_jmp): $(objs) $(test_jmp).o
+	$(CC) $(objs) $(test_jmp).o -o $(test_jmp)
+
 test:
 	./$(test_add)
 	./$(test_mov)
+	./$(test_jmp)
+
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f $(test_add) $(test_mov) core *.o *~
+	rm -f $(test_add) $(test_mov) $(test_jmp) core *.o *~
 
-.PHONY: $(test_add) $(test_mov)
+.PHONY: $(test_add) $(test_mov) $(test_jmp)

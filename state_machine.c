@@ -28,9 +28,8 @@ init_state(void)
 	state->flags = xmalloc(sizeof(struct td4_flag_registers));
 	state->flags->carry = 0;
 
+	state->ip = 0;
 	memset(state->memory, 0x0, sizeof(state->memory));
-
-	state->ip = state->memory;
 
 	return state;
 }
@@ -39,7 +38,7 @@ void cleanup_state(struct td4_state *state)
 {
 	xfree(state->acc);
 	xfree(state->flags);
-	state->ip = NULL;
+	state->ip = 0;
 	xfree(state);
 }
 
@@ -50,7 +49,7 @@ reset_state(struct td4_state *state)
 	state->flags->carry = 0;
 	memset(state->memory, 0x0, sizeof(state->memory));
 
-	state->ip = state->memory;
+	state->ip = 0;
 
 	return state;
 }

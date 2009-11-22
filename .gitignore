@@ -4,5 +4,6 @@ td4emu
 core
 test/test_add
 test/test_mov
+test/test_jmp
 test/core
 

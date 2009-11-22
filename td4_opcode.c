@@ -18,6 +18,9 @@ static u_int8_t mov_b(struct td4_state *state, u_int8_t im);
 static u_int8_t mov_a2b(struct td4_state *state, u_int8_t im);
 static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im);
 
+// JMP function
+static u_int8_t jmp(struct td4_state *state, u_int8_t im);
+
 // OPCODE for TD4.
 struct opcode {
 	u_int8_t op;
@@ -40,13 +43,13 @@ static struct opcode opcodes[] = {
 	{ 0x04, mov_a2b }, // 0100: MOV B, A
 
 	// JMP function.
-	{ 0x0f, NULL }, // 1111: JMP Im
+	{ 0x0f, jmp }, // 1111: JMP Im
 
 	// JMP if a condition is true.
 	{ 0x0e, NULL }, // 1110: JNC Im
 	
 	// IN functions.
-	{ 0x10, NULL }, // 0010: IN A
+	{ 0x02, NULL }, // 0010: IN A
 	{ 0x06, NULL }, // 0110: IN B
 
 	// OUT functions.
@@ -57,7 +60,7 @@ static struct opcode opcodes[] = {
 	// it same as  ADD A, 0
 };
 
-#define OPCODE_COUNT (sizeof(opcodes) / sizeof(opcodes[0]))
+#define OPCODE_MAX_VALUE (0x0f + 0x01)
 
 struct opcode_table {
 	struct opcode *op;
@@ -77,9 +80,6 @@ static bool is_4bit_range(u_int8_t val)
 static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
 	u_int8_t ret = 0;
-
-	// clear carry flag before add.
-	set_carry_flag(state, 0);
 
 	ret = reg + im;
 	if (ret > 0x0f) {
@@ -104,8 +104,6 @@ static u_int8_t add_b(struct td4_state *state, u_int8_t im)
 
 static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
-	// clear carry flag before mov.
-	set_carry_flag(state, 0);
 	reg = im;
 	return reg;
 }
@@ -131,6 +129,11 @@ static u_int8_t mov_a2b(struct td4_state *state, u_int8_t im)
 static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_a = mov(state, state->acc->reg_a, state->acc->reg_b);
+	return 0;
+}
+
+static u_int8_t jmp(struct td4_state *state, u_int8_t im)
+{
 	return 0;
 }
 
@@ -163,13 +166,13 @@ void init_opcode_table(void)
 {
 	int i;
 
-	op_table = xmalloc(sizeof(struct opcode_table *) * OPCODE_COUNT);
+	op_table = xmalloc(sizeof(struct opcode_table *) * OPCODE_MAX_VALUE);
 
-	for (i = 0; i < OPCODE_COUNT; i++)
+	for (i = 0; i < OPCODE_MAX_VALUE; i++)
 		op_table[i].op = NULL;
 
-	for (i = 0; i < OPCODE_COUNT; i++) 
-		op_table[opcodes[i].op].op = &opcodes[i];
+	for (i = 0; i < sizeof(opcodes) / sizeof(opcodes[0]); i++)
+	     op_table[opcodes[i].op].op = &opcodes[i];
 }
 
 void cleanup_opcode_table(void)
@@ -186,6 +189,9 @@ bool parse_opecode(struct td4_state *state, u_int8_t data)
 	im = data & 0x0f;
 	
 	dump_operand(op, im);
+
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
 
 	// op should already be between 0 to 0xf.
 	// it doesn't need to check its range.

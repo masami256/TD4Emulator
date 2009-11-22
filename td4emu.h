@@ -21,7 +21,7 @@ struct td4_flag_registers {
 struct td4_state {
 	struct td4_acc_registers *acc;
 	struct td4_flag_registers *flags;
-	u_int8_t *ip;
+	u_int8_t ip;
 	u_int8_t memory[ADDRESS_SPACE_SIZE];
 };
 
