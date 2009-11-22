@@ -5,5 +5,8 @@ core
 test/test_add
 test/test_mov
 test/test_jmp
+test/test_jnc
+test/test_in
+test/test_out
 test/core
 
