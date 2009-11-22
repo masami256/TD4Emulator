@@ -2,7 +2,6 @@
 #define TD4EMU_H 1
 
 #include <sys/types.h>
-#include <assert.h>
 
 // TD4 has two registers which A register and B register.
 // Register size is 4 bit. 
@@ -30,10 +29,7 @@ struct td4_state {
 // td4emu.c
 int start_emulation(char *file);
 
-// td4_opcode.c
-void init_opcode_table(void);
-void cleanup_opcode_table(void);
-u_int8_t parse_opecode(u_int8_t data);
-
+// td4_abort.c
+void td4_abort(char *msg);
 
 #endif // TD4EMU_H

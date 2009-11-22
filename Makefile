@@ -8,8 +8,8 @@ objs = main.o \
 	td4emu.o \
 	state_machine.o \
 	td4_opcode.o \
-	xmalloc.o
-
+	xmalloc.o \
+	td4_abort.o
 
 test_targets = test/parse_test.o
 

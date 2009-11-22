@@ -145,7 +145,6 @@ void init_opcode_table(void)
 	int i;
 
 	op_table = xmalloc(sizeof(struct opcode_table *) * OPCODE_COUNT);
-	assert(op_table != NULL);
 
 	for (i = 0; i < OPCODE_COUNT; i++)
 		op_table[i].op = NULL;

@@ -4,6 +4,7 @@
 
 #include "td4emu.h"
 #include "state_machine.h"
+#include "td4_opcode.h"
 
 int start_emulation(char *file)
 {
