@@ -19,8 +19,12 @@ struct td4_flag_registers {
 // Memory space is 16 bytes
 #define ADDRESS_SPACE_SIZE 16
 
+// td4emu.c
+int start_emulation(char *file);
+
 // td4_opcode.c
 void init_opcode_table(void);
 void cleanup_opcode_table(void);
+u_int8_t parse_opecode(u_int8_t data);
 
 #endif // TD4EMU_H
