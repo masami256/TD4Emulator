@@ -24,7 +24,7 @@ int test_jmp(void)
 	// jmp 0x00 ; 1111 : 0000 
 	state->ip = 0;
 	parse_opecode(state, 0xf0);
-	b = (state->ip == 0x03) ? true : false;
+	b = (state->ip == 0x00) ? true : false;
 	if(b) {
 		if (get_carry_flag(state) != 0)
 			b = false;
@@ -34,7 +34,7 @@ int test_jmp(void)
 	// jmp 0x0f ; 1111 : 1111 
 	state->ip = 0;
 	parse_opecode(state, 0xff);
-	b = (state->ip == 0x03) ? true : false;
+	b = (state->ip == 0x0f) ? true : false;
 	if(b) {
 		if (get_carry_flag(state) != 0)
 			b = false;

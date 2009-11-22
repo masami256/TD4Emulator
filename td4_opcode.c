@@ -134,6 +134,7 @@ static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im)
 
 static u_int8_t jmp(struct td4_state *state, u_int8_t im)
 {
+	state->ip = im;
 	return 0;
 }
 
