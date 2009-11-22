@@ -2,3 +2,7 @@ td4emu
 *.o
 *~
 core
+test/test_add
+test/test_mov
+test/core
+
