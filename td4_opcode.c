@@ -15,6 +15,8 @@ static u_int8_t add_b(struct td4_state *state, u_int8_t im);
 static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im);
 static u_int8_t mov_a(struct td4_state *state, u_int8_t im);
 static u_int8_t mov_b(struct td4_state *state, u_int8_t im);
+static u_int8_t mov_a2b(struct td4_state *state, u_int8_t im);
+static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im);
 
 // OPCODE for TD4.
 struct opcode {
@@ -34,8 +36,8 @@ static struct opcode opcodes[] = {
 	{ 0x07, mov_b }, // 0111: MOV B, Im
 
 	// Mov data from register to register.
-	{ 0x01, NULL }, // 0001: MOV A, B
-	{ 0x04, NULL }, // 0100: MOV B, A
+	{ 0x01, mov_b2a }, // 0001: MOV A, B
+	{ 0x04, mov_a2b }, // 0100: MOV B, A
 
 	// JMP function.
 	{ 0x0f, NULL }, // 1111: JMP Im
@@ -102,13 +104,9 @@ static u_int8_t add_b(struct td4_state *state, u_int8_t im)
 
 static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
-	// im should be between 0x00 to 0x0f
-	if (is_4bit_range(im)) {
-		// clear carry flag before mov.
-		set_carry_flag(state, 0);
-		reg = im;
-	}
-
+	// clear carry flag before mov.
+	set_carry_flag(state, 0);
+	reg = im;
 	return reg;
 }
 
@@ -121,6 +119,18 @@ static u_int8_t mov_a(struct td4_state *state, u_int8_t im)
 static u_int8_t mov_b(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_b = mov(state, state->acc->reg_b, im);
+	return 0;
+}
+
+static u_int8_t mov_a2b(struct td4_state *state, u_int8_t im)
+{
+	state->acc->reg_b = mov(state, state->acc->reg_b, state->acc->reg_a);
+	return 0;
+}
+
+static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im)
+{
+	state->acc->reg_a = mov(state, state->acc->reg_a, state->acc->reg_b);
 	return 0;
 }
 
@@ -177,8 +187,9 @@ bool parse_opecode(struct td4_state *state, u_int8_t data)
 	
 	dump_operand(op, im);
 
-	if (is_4bit_range(op))
-		ret = op_table[op].op->func(state, im);
+	// op should already be between 0 to 0xf.
+	// it doesn't need to check its range.
+	ret = op_table[op].op->func(state, im);
 
 	return ret;
 }
