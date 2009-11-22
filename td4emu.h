@@ -6,7 +6,7 @@
 
 // TD4 has two registers which A register and B register.
 // Register size is 4 bit. 
-struct td4_registers {
+struct td4_acc_registers {
 	u_int8_t reg_a;
 	u_int8_t reg_b;
 };
@@ -19,6 +19,14 @@ struct td4_flag_registers {
 // Memory space is 16 bytes
 #define ADDRESS_SPACE_SIZE 16
 
+struct td4_state {
+	struct td4_acc_registers *acc;
+	struct td4_flag_registers *flags;
+	u_int8_t *ip;
+	unsigned char memory[ADDRESS_SPACE_SIZE];
+};
+
+
 // td4emu.c
 int start_emulation(char *file);
 
@@ -26,5 +34,6 @@ int start_emulation(char *file);
 void init_opcode_table(void);
 void cleanup_opcode_table(void);
 u_int8_t parse_opecode(u_int8_t data);
+
 
 #endif // TD4EMU_H

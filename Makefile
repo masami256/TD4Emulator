@@ -6,8 +6,10 @@ target = td4emu
 
 objs = main.o \
 	td4emu.o \
+	state_machine.o \
 	td4_opcode.o \
 	xmalloc.o
+
 
 test_targets = test/parse_test.o
 

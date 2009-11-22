@@ -3,22 +3,18 @@
 #include <string.h>
 
 #include "td4emu.h"
-
-// TD4's memory space.
-unsigned char memory[ADDRESS_SPACE_SIZE];
-
-// TD4's program counter
-unsigned int IP;
+#include "state_machine.h"
 
 int start_emulation(char *file)
 {
-	struct td4_registers regs;
+	struct td4_state *state;
 
-	memset(&regs, 0, sizeof(regs));
-
+	// initializing registers and others.
+	state = init_state();
 	init_opcode_table();
 	
 	cleanup_opcode_table();
-
+	
+	return 0;
 }
 

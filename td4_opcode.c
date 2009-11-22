@@ -1,24 +1,37 @@
 #include "td4emu.h"
 #include "xmalloc.h"
+#include "state_machine.h"
 
 #include <stdio.h>
+
+static u_int8_t range_check_4bit(u_int8_t val);
+
+// ADD functions.
+static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im);
+static u_int8_t add_a(struct td4_state *state, u_int8_t im);
+static u_int8_t add_b(struct td4_state *state, u_int8_t im);
+
+// MOV functions.
+static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im);
+static u_int8_t mov_a(struct td4_state *state, u_int8_t im);
+static u_int8_t mov_b(struct td4_state *state, u_int8_t im);
 
 // OPCODE for TD4.
 struct opcode {
 	u_int8_t op;
-	u_int8_t (*func)(u_int8_t im);
+	u_int8_t (*func)(struct td4_state *state, u_int8_t im);
 };
 
 // OPCODE for TD4.
 static struct opcode opcodes[] = {
 	// ADD functions
-	{ 0x00, NULL }, // 0000: ADD A, Im
-	{ 0x05, NULL }, // 0101: AAD B, Im
+	{ 0x00, add_a }, // 0000: ADD A, Im
+	{ 0x05, add_b }, // 0101: AAD B, Im
 	
 	// MOV functions
 	// Moving imediation data to A or B register.
-	{ 0x03, NULL }, // 0011: MOV A, Im
-	{ 0x07, NULL }, // 0111: MOV B, Im
+	{ 0x03, mov_a }, // 0011: MOV A, Im
+	{ 0x07, mov_b }, // 0111: MOV B, Im
 
 	// Mov data from register to register.
 	{ 0x01, NULL }, // 0001: MOV A, B
@@ -49,31 +62,62 @@ struct opcode_table {
 };
 
 static struct opcode_table *op_table;
-static struct td4_flag_registers td4_flags;
+
+static u_int8_t range_check_4bit(u_int8_t val)
+{
+	if (val >= 0x00 && val <= 0x0f)
+		return 1;
+	return 0;
+}
 
 // PRIVATE FUNCTIONS
-static u_int8_t add(u_int8_t reg, u_int8_t im)
+static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
 	u_int8_t ret = 0;
 
 	// clear carry flag before add.
-	td4_flags.carry = 0;
+	set_carry_flag(state, 0);
 
 	ret = reg + im;
 	if (ret > 0x0f)
-		td4_flags.carry = 1;
+		set_carry_flag(state, 1);
 
 	return ret;
 }
 
-static u_int8_t add_a(struct td4_registers *registers, u_int8_t im)
+static u_int8_t add_a(struct td4_state *state, u_int8_t im)
 {
-	return add(registers->reg_a, im);
+	return add(state, state->acc->reg_a, im);
 }
 
-static u_int8_t add_b(struct td4_registers *registers, u_int8_t im)
+static u_int8_t add_b(struct td4_state *state, u_int8_t im)
 {
-	return add(registers->reg_b, im);
+	return add(state, state->acc->reg_b, im);
+}
+
+static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
+{
+	u_int8_t ret = 0;
+
+	// im should be between 0x00 to 0x0f
+	if (range_check_4bit(im)) {
+		// clear carry flag before mov.
+		set_carry_flag(state, 0);
+		reg = im;
+		ret = 1;
+	}
+
+	return ret;
+}
+
+static u_int8_t mov_a(struct td4_state *state, u_int8_t im)
+{
+	return mov(state, state->acc->reg_a, im);
+}
+
+static u_int8_t mov_b(struct td4_state *state, u_int8_t im)
+{
+	return mov(state, state->acc->reg_b, im);
 }
 
 static void dump_operand(u_int8_t op, u_int8_t im)
