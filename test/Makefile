@@ -7,7 +7,8 @@ parse_test = parse_test
 objs = ../td4emu.o \
 	../td4_opcode.o \
 	../xmalloc.o \
-	../state_machine.o
+	../state_machine.o \
+	../td4_abort.o
 
 $(parse_test): $(objs) $(parse_test).o
 	$(CC) $(objs) $(parse_test).o -o $(parse_test)

@@ -88,40 +88,42 @@ static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im)
 
 static u_int8_t add_a(struct td4_state *state, u_int8_t im)
 {
-	return add(state, state->acc->reg_a, im);
+	state->acc->reg_a = add(state, state->acc->reg_a, im);
+	return 0;
 }
 
 static u_int8_t add_b(struct td4_state *state, u_int8_t im)
 {
-	return add(state, state->acc->reg_b, im);
+	state->acc->reg_b = add(state, state->acc->reg_b, im);
+	return 0;
 }
 
 static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
-	u_int8_t ret = 0;
-
 	// im should be between 0x00 to 0x0f
 	if (is_4bit_range(im)) {
 		// clear carry flag before mov.
 		set_carry_flag(state, 0);
 		reg = im;
-		ret = 1;
 	}
 
-	return ret;
+	return reg;
 }
 
 static u_int8_t mov_a(struct td4_state *state, u_int8_t im)
 {
-	return mov(state, state->acc->reg_a, im);
+	state->acc->reg_a =  mov(state, state->acc->reg_a, im);
+	return 0;
 }
 
 static u_int8_t mov_b(struct td4_state *state, u_int8_t im)
 {
-	return mov(state, state->acc->reg_b, im);
+	state->acc->reg_b = mov(state, state->acc->reg_b, im);
+	return 0;
 }
 
 // for debuging
+#ifdef TD4_DEBUG
 static void dump_operand(u_int8_t op, u_int8_t im)
 {
 	char op_c[4] = { 0x00 };
@@ -138,8 +140,11 @@ static void dump_operand(u_int8_t op, u_int8_t im)
 	for (i = 4; i > 0; i--, im_tmp >>= 1)
 		op_i[i - 1] =  (im_tmp & 0x01) ? '1' : '0';
 
-	printf("op is %s:%02x | im is %s:%02x\n", op_c, op, op_i, im);
+	printf("op is %s:0x%02x | im is %s:0x%02x\n", op_c, op, op_i, im);
 }
+#else
+static void dump_operand(u_int8_t op, u_int8_t im) {}
+#endif // TD4_DEBUG
 
 // PUBLIC FUNTIONS
 void init_opcode_table(void)
@@ -160,7 +165,7 @@ void cleanup_opcode_table(void)
 	xfree(op_table);
 }
 
-bool parse_opecode(u_int8_t data)
+bool parse_opecode(struct td4_state *state, u_int8_t data)
 {
 	u_int8_t op, im, ret;
 
@@ -169,9 +174,9 @@ bool parse_opecode(u_int8_t data)
 	im = data & 0x0f;
 	
 	dump_operand(op, im);
-/*
-	if (op >= 0x00 && op <= 0x0f)
-		ret = op_table[op].op->func(im);
-*/
+
+	if (is_4bit_range(op))
+		ret = op_table[op].op->func(state, im);
+
 	return ret;
 }
