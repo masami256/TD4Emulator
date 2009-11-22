@@ -179,11 +179,17 @@ static u_int8_t in_b(struct td4_state *state, u_int8_t im)
 
 static u_int8_t out_im(struct td4_state *state, u_int8_t im)
 {
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
+	state->io->out_port = im;
 	return 0;
 }
 
 static u_int8_t out_b(struct td4_state *state, u_int8_t im)
 {
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
+	state->io->out_port = state->acc->reg_b;
 	return 0;
 }
 

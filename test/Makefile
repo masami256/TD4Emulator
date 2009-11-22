@@ -7,6 +7,7 @@ test_mov = test_mov
 test_jmp = test_jmp
 test_jnc = test_jnc
 test_in  = test_in
+test_out = test_out
 
 objs = ../td4emu.o \
 	../td4_opcode.o \
@@ -15,7 +16,7 @@ objs = ../td4emu.o \
 	../td4_abort.o \
 	test_common.o
 
-all: $(test_add) $(test_mov) $(test_jmp) $(test_jnc) $(test_in)
+all: $(test_add) $(test_mov) $(test_jmp) $(test_jnc) $(test_in) $(test_out)
 
 $(test_add): $(objs) $(test_add).o
 	$(CC) $(objs) $(test_add).o -o $(test_add)
@@ -32,17 +33,22 @@ $(test_jnc): $(objs) $(test_jnc).o
 $(test_in): $(objs) $(test_in).o
 	$(CC) $(objs) $(test_in).o -o $(test_in)
 
+$(test_out): $(objs) $(test_out).o
+	$(CC) $(objs) $(test_out).o -o $(test_out)
+
 test:
 	./$(test_add)
 	./$(test_mov)
 	./$(test_jmp)
 	./$(test_jnc)
 	./$(test_in)
+	./$(test_out)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f $(test_add) $(test_mov) $(test_jmp) $(test_jnc) $(test_in) core *.o *~
+	rm -f $(test_add) $(test_mov) $(test_jmp) $(test_jnc) $(test_in) $(test_out) core *.o *~
 
-.PHONY: $(test_add) $(test_mov) $(test_jmp) $(test_jnc) $(test_in)
+.PHONY: $(test_add) $(test_mov) $(test_jmp) $(test_jnc) $(test_in) $(test_out)
+
