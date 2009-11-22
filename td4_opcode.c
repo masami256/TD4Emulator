@@ -80,8 +80,10 @@ static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im)
 	set_carry_flag(state, 0);
 
 	ret = reg + im;
-	if (ret > 0x0f)
+	if (ret > 0x0f) {
+		ret &= 0x0f;
 		set_carry_flag(state, 1);
+	}
 
 	return ret;
 }

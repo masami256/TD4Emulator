@@ -4,18 +4,14 @@
 
 #include <string.h>
 
-static u_int8_t *init_ip(void)
-{
-	u_int8_t *ip = xmalloc(sizeof(u_int8_t));
-
-	*ip = 0;
-
-	return ip;
-}
-
 inline void set_carry_flag(struct td4_state *state, u_int8_t flg)
 {
 	state->flags->carry = flg;
+}
+
+inline u_int8_t get_carry_flag(struct td4_state *state)
+{
+	return state->flags->carry;
 }
 
 struct td4_state *
@@ -32,12 +28,29 @@ init_state(void)
 	state->flags = xmalloc(sizeof(struct td4_flag_registers));
 	state->flags->carry = 0;
 
-	state->ip = init_ip();
-
 	memset(state->memory, 0x0, sizeof(state->memory));
+
+	state->ip = state->memory;
 
 	return state;
 }
 
+void cleanup_state(struct td4_state *state)
+{
+	xfree(state->acc);
+	xfree(state->flags);
+	state->ip = NULL;
+	xfree(state);
+}
 
+struct td4_state *
+reset_state(struct td4_state *state)
+{
+	state->acc->reg_a = state->acc->reg_b = 0;
+	state->flags->carry = 0;
+	memset(state->memory, 0x0, sizeof(state->memory));
 
+	state->ip = state->memory;
+
+	return state;
+}

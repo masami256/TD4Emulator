@@ -22,7 +22,7 @@ struct td4_state {
 	struct td4_acc_registers *acc;
 	struct td4_flag_registers *flags;
 	u_int8_t *ip;
-	unsigned char memory[ADDRESS_SPACE_SIZE];
+	u_int8_t memory[ADDRESS_SPACE_SIZE];
 };
 
 typedef enum {
