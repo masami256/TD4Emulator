@@ -31,6 +31,9 @@ init_state(void)
 	state->ip = 0;
 	memset(state->memory, 0x0, sizeof(state->memory));
 
+	state->io = xmalloc(sizeof(struct td4_io_port));
+	state->io->in_port = state->io->out_port = 0;
+
 	return state;
 }
 
@@ -39,6 +42,7 @@ void cleanup_state(struct td4_state *state)
 	xfree(state->acc);
 	xfree(state->flags);
 	state->ip = 0;
+	xfree(state->io);
 	xfree(state);
 }
 
@@ -50,6 +54,8 @@ reset_state(struct td4_state *state)
 	memset(state->memory, 0x0, sizeof(state->memory));
 
 	state->ip = 0;
+
+	state->io->in_port = state->io->out_port = 0;
 
 	return state;
 }

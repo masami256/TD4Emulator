@@ -4,8 +4,6 @@
 
 #include <stdio.h>
 
-static bool is_4bit_range(u_int8_t val);
-
 // ADD functions.
 static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im);
 static u_int8_t add_a(struct td4_state *state, u_int8_t im);
@@ -20,6 +18,17 @@ static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im);
 
 // JMP function
 static u_int8_t jmp(struct td4_state *state, u_int8_t im);
+
+// JNC function
+static u_int8_t jnc(struct td4_state *state, u_int8_t im);
+
+// IN functions
+static u_int8_t in_a(struct td4_state *state, u_int8_t im);
+static u_int8_t in_b(struct td4_state *state, u_int8_t im);
+
+// OUT functions
+static u_int8_t out_im(struct td4_state *state, u_int8_t im);
+static u_int8_t out_b(struct td4_state *state, u_int8_t im);
 
 // OPCODE for TD4.
 struct opcode {
@@ -46,15 +55,15 @@ static struct opcode opcodes[] = {
 	{ 0x0f, jmp }, // 1111: JMP Im
 
 	// JMP if a condition is true.
-	{ 0x0e, NULL }, // 1110: JNC Im
+	{ 0x0e, jnc }, // 1110: JNC Im
 	
 	// IN functions.
-	{ 0x02, NULL }, // 0010: IN A
-	{ 0x06, NULL }, // 0110: IN B
+	{ 0x02, in_a }, // 0010: IN A
+	{ 0x06, in_b }, // 0110: IN B
 
 	// OUT functions.
-	{ 0x09, NULL }, // 1001: OUT B
-	{ 0x0b, NULL }, // 1011: OUT Im
+	{ 0x09, out_b }, // 1001: OUT B
+	{ 0x0b, out_im }, // 1011: OUT Im
 
 	// NOP
 	// it same as  ADD A, 0
@@ -70,15 +79,11 @@ static struct opcode_table *op_table;
 
 // PRIVATE FUNCTIONS
 
-static bool is_4bit_range(u_int8_t val)
-{
-	if (val >= 0x00 && val <= 0x0f)
-		return true;
-	return false;
-}
-
 static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
+
 	u_int8_t ret = 0;
 
 	ret = reg + im;
@@ -104,6 +109,9 @@ static u_int8_t add_b(struct td4_state *state, u_int8_t im)
 
 static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
+
 	reg = im;
 	return reg;
 }
@@ -134,7 +142,48 @@ static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im)
 
 static u_int8_t jmp(struct td4_state *state, u_int8_t im)
 {
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
+
 	state->ip = im;
+	return 0;
+}
+
+static u_int8_t jnc(struct td4_state *state, u_int8_t im)
+{
+	if (!get_carry_flag(state)) 
+		state->ip = im;
+
+	// clear carry flag after execute opecode.
+	set_carry_flag(state, 0);
+
+	return 0;
+}
+
+
+static u_int8_t in_a(struct td4_state *state, u_int8_t im)
+{
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
+	state->acc->reg_a = state->io->in_port & 0x0f;
+	return 0;
+}
+
+static u_int8_t in_b(struct td4_state *state, u_int8_t im)
+{
+	// clear carry flag before execute opecode.
+	set_carry_flag(state, 0);
+	state->acc->reg_b = state->io->in_port & 0x0f;
+	return 0;
+}
+
+static u_int8_t out_im(struct td4_state *state, u_int8_t im)
+{
+	return 0;
+}
+
+static u_int8_t out_b(struct td4_state *state, u_int8_t im)
+{
 	return 0;
 }
 
@@ -190,9 +239,6 @@ bool parse_opecode(struct td4_state *state, u_int8_t data)
 	im = data & 0x0f;
 	
 	dump_operand(op, im);
-
-	// clear carry flag before execute opecode.
-	set_carry_flag(state, 0);
 
 	// op should already be between 0 to 0xf.
 	// it doesn't need to check its range.

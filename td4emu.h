@@ -18,11 +18,17 @@ struct td4_flag_registers {
 // Memory space is 16 bytes
 #define ADDRESS_SPACE_SIZE 16
 
+struct td4_io_port {
+	u_int8_t in_port;
+	u_int8_t out_port;
+};
+
 struct td4_state {
 	struct td4_acc_registers *acc;
 	struct td4_flag_registers *flags;
 	u_int8_t ip;
 	u_int8_t memory[ADDRESS_SPACE_SIZE];
+	struct td4_io_port *io;
 };
 
 typedef enum {
