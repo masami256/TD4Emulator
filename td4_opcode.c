@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-static u_int8_t range_check_4bit(u_int8_t val);
+static bool is_4bit_range(u_int8_t val);
 
 // ADD functions.
 static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im);
@@ -63,14 +63,15 @@ struct opcode_table {
 
 static struct opcode_table *op_table;
 
-static u_int8_t range_check_4bit(u_int8_t val)
+// PRIVATE FUNCTIONS
+
+static bool is_4bit_range(u_int8_t val)
 {
 	if (val >= 0x00 && val <= 0x0f)
-		return 1;
-	return 0;
+		return true;
+	return false;
 }
 
-// PRIVATE FUNCTIONS
 static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im)
 {
 	u_int8_t ret = 0;
@@ -100,7 +101,7 @@ static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
 	u_int8_t ret = 0;
 
 	// im should be between 0x00 to 0x0f
-	if (range_check_4bit(im)) {
+	if (is_4bit_range(im)) {
 		// clear carry flag before mov.
 		set_carry_flag(state, 0);
 		reg = im;
@@ -120,6 +121,7 @@ static u_int8_t mov_b(struct td4_state *state, u_int8_t im)
 	return mov(state, state->acc->reg_b, im);
 }
 
+// for debuging
 static void dump_operand(u_int8_t op, u_int8_t im)
 {
 	char op_c[4] = { 0x00 };
@@ -158,11 +160,11 @@ void cleanup_opcode_table(void)
 	xfree(op_table);
 }
 
-u_int8_t parse_opecode(u_int8_t data)
+bool parse_opecode(u_int8_t data)
 {
 	u_int8_t op, im, ret;
 
-	ret = -1;
+	ret = false;
 	op = data >> 4;
 	im = data & 0x0f;
 	

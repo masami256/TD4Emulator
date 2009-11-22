@@ -1,4 +1,4 @@
-#ifndef TD4EMU_h
+#ifndef TD4EMU_H 
 #define TD4EMU_H 1
 
 #include <sys/types.h>
@@ -25,6 +25,10 @@ struct td4_state {
 	unsigned char memory[ADDRESS_SPACE_SIZE];
 };
 
+typedef enum {
+	false = 0,
+	true,
+} bool;
 
 // td4emu.c
 int start_emulation(char *file);
