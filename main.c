@@ -1,21 +1,26 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <gtk/gtk.h>
 
 #include "td4emu.h"
 
-
-void usage(char *prog)
+static void create_window(void)
 {
-	fprintf(stderr, "usage %s file\n", prog);
-	exit(-1);
+	GtkWidget *window;
+	
+	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_widget_set_size_request(window, 300, 200);
+
+	gtk_widget_show_all(window);
+	
+	gtk_main();
+
 }
 
 int main(int argc, char **argv)
 {
-	if (argc != 2) 
-		usage(argv[0]);
+	gtk_init(&argc, &argv);
 
-	return start_emulation(argv[1]);
+	create_window();
+
+	return 0;
 }
 
