@@ -133,12 +133,79 @@ int test_decoder_add_b(struct td4_state *state)
 
 }
 
+int test_decoder_jmp(struct td4_state *state)
+{
+	bool b;
+	int i;
+
+	state = reset_state(state);
+
+	// Add 0x01 to regster B 15 times.
+	for (i = 0; i < ADDRESS_SPACE_SIZE - 1; i++) 
+		state->memory[i] = 0x51;
+
+	// jmp to 0x0f.
+	state->memory[10] = 0xff;
+
+	decoder(state);
+
+	// register B should be 0x0a.
+	b = (state->acc->reg_b == 0x0a) ? true : false;
+	if(b) {
+		// last execution is "add A, 0".
+		// so, carry should be 0.
+		if (get_carry_flag(state) != 0)
+			b = false;
+	}
+	print_result(b, "DECODER JMP Test001");
+	return 0;
+}
+
+int test_decoder_jnc(struct td4_state *state)
+{
+	bool b;
+	int i;
+
+	state = reset_state(state);
+
+	// Add 0x01 to regster B 15 times.
+	for (i = 0; i < ADDRESS_SPACE_SIZE - 1; i++) 
+		state->memory[i] = 0x51;
+
+	// mov b, 0
+
+	state->memory[ADDRESS_SPACE_SIZE - 1] = 0x70;
+
+	// jmp to 0x01
+	state->memory[6] = 0x71;
+	decoder(state);
+
+	// jmp to 0x0f.
+	state->memory[7] = 0xff;
+
+	// register B should be 0x0
+	b = (state->acc->reg_b == 0x0) ? true : false;
+	if(b) {
+		// last execution is "mov b, 0".
+		// so, carry should be 0.
+		if (get_carry_flag(state) != 0)
+			b = false;
+	}
+	print_result(b, "DECODER JNC Test001");
+	printf("%d\n", state->acc->reg_b);
+	return 0;
+}
+
 int test_decoder(void)
 {
 	struct td4_state *state = init_state();
 
 	test_decoder_add_a(state);
 	test_decoder_add_b(state);
+
+	test_decoder_jmp(state);
+	test_decoder_jnc(state);
+
 	cleanup_state(state);
 
 	return 0;
