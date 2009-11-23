@@ -98,13 +98,13 @@ static u_int8_t add(struct td4_state *state, u_int8_t reg, u_int8_t im)
 static u_int8_t add_a(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_a = add(state, state->acc->reg_a, im);
-	return 0;
+	return 1;
 }
 
 static u_int8_t add_b(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_b = add(state, state->acc->reg_b, im);
-	return 0;
+	return 1;
 }
 
 static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
@@ -119,25 +119,25 @@ static u_int8_t mov(struct td4_state *state, u_int8_t reg, u_int8_t im)
 static u_int8_t mov_a(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_a =  mov(state, state->acc->reg_a, im);
-	return 0;
+	return 1;
 }
 
 static u_int8_t mov_b(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_b = mov(state, state->acc->reg_b, im);
-	return 0;
+	return 1;
 }
 
 static u_int8_t mov_a2b(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_b = mov(state, state->acc->reg_b, state->acc->reg_a);
-	return 0;
+	return 1;
 }
 
 static u_int8_t mov_b2a(struct td4_state *state, u_int8_t im)
 {
 	state->acc->reg_a = mov(state, state->acc->reg_a, state->acc->reg_b);
-	return 0;
+	return 1;
 }
 
 static u_int8_t jmp(struct td4_state *state, u_int8_t im)
@@ -145,14 +145,14 @@ static u_int8_t jmp(struct td4_state *state, u_int8_t im)
 	// clear carry flag before execute opecode.
 	set_carry_flag(state, 0);
 
-	state->ip = im;
+	set_ip(state, im);
 	return 0;
 }
 
 static u_int8_t jnc(struct td4_state *state, u_int8_t im)
 {
 	if (!get_carry_flag(state)) 
-		state->ip = im;
+		set_ip(state, im);
 
 	// clear carry flag after execute opecode.
 	set_carry_flag(state, 0);
@@ -166,7 +166,7 @@ static u_int8_t in_a(struct td4_state *state, u_int8_t im)
 	// clear carry flag before execute opecode.
 	set_carry_flag(state, 0);
 	state->acc->reg_a = state->io->in_port & 0x0f;
-	return 0;
+	return 1;
 }
 
 static u_int8_t in_b(struct td4_state *state, u_int8_t im)
@@ -174,7 +174,7 @@ static u_int8_t in_b(struct td4_state *state, u_int8_t im)
 	// clear carry flag before execute opecode.
 	set_carry_flag(state, 0);
 	state->acc->reg_b = state->io->in_port & 0x0f;
-	return 0;
+	return 1;
 }
 
 static u_int8_t out_im(struct td4_state *state, u_int8_t im)
@@ -182,7 +182,7 @@ static u_int8_t out_im(struct td4_state *state, u_int8_t im)
 	// clear carry flag before execute opecode.
 	set_carry_flag(state, 0);
 	state->io->out_port = im;
-	return 0;
+	return 1;
 }
 
 static u_int8_t out_b(struct td4_state *state, u_int8_t im)
@@ -190,7 +190,7 @@ static u_int8_t out_b(struct td4_state *state, u_int8_t im)
 	// clear carry flag before execute opecode.
 	set_carry_flag(state, 0);
 	state->io->out_port = state->acc->reg_b;
-	return 0;
+	return 1;
 }
 
 // for debuging
@@ -249,6 +249,8 @@ bool parse_opecode(struct td4_state *state, u_int8_t data)
 	// op should already be between 0 to 0xf.
 	// it doesn't need to check its range.
 	ret = op_table[op].op->func(state, im);
+	if (ret)
+		inrement_ip(state);
 
 	return ret;
 }

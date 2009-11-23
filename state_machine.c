@@ -1,5 +1,6 @@
 #include "td4emu.h"
 #include "state_machine.h"
+#include "td4_opcode.h"
 #include "xmalloc.h"
 
 #include <string.h>
@@ -14,8 +15,35 @@ inline u_int8_t get_carry_flag(struct td4_state *state)
 	return state->flags->carry;
 }
 
-struct td4_state *
-init_state(void)
+static inline u_int8_t fetch(struct td4_state *state)
+{
+	return state->memory[state->ip];
+}
+
+static inline u_int8_t get_ip(struct td4_state *state)
+{
+	return state->ip;
+}
+
+inline void set_ip(struct td4_state *state, u_int8_t val)
+{
+	state->ip = val;
+}
+
+inline void inrement_ip(struct td4_state *state)
+{
+	state->ip++;
+}
+
+void *decoder(struct td4_state *state)
+{
+	while (get_ip(state) < ADDRESS_SPACE_SIZE) 
+		parse_opecode(state, fetch(state));
+
+	return NULL;
+}
+
+struct td4_state *init_state(void)
 {
 	struct td4_state *state;
 	

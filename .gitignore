@@ -8,5 +8,6 @@ test/test_jmp
 test/test_jnc
 test/test_in
 test/test_out
+test/test_decoder
 test/core
 
