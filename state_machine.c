@@ -1,6 +1,6 @@
 #include "td4emu.h"
 #include "state_machine.h"
-#include "td4_opcode.h"
+#include "td4_decoder.h"
 #include "xmalloc.h"
 
 #include <string.h>

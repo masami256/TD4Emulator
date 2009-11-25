@@ -11,7 +11,7 @@ test_out = test_out
 test_decoder = test_decoder
 
 objs = ../td4emu.o \
-	../td4_opcode.o \
+	../td4_decoder.o \
 	../xmalloc.o \
 	../state_machine.o \
 	../td4_abort.o \

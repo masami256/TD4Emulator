@@ -1,5 +1,5 @@
 #include "test_common.h"
-#include "../td4_opcode.h"
+#include "../td4_decoder.h"
 #include "../state_machine.h"
 
 #include <stdio.h>

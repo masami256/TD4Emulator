@@ -11,7 +11,7 @@ target = td4emu
 objs = main.o \
 	td4emu.o \
 	state_machine.o \
-	td4_opcode.o \
+	td4_decoder.o \
 	xmalloc.o \
 	td4_abort.o
 
