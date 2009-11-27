@@ -53,7 +53,15 @@ static gboolean on_reset(GtkWidget *widget, gpointer data)
 	
 static GtkWidget *create_addr_label(int count)
 {
-	return gtk_label_new(g_strdup_printf("Address 0x%02x", count));
+	gchar *tmp = g_strdup_printf("Address 0x%02x", count);
+	GtkWidget *ret;
+
+	ret = gtk_label_new(tmp);
+
+	g_free(tmp);
+	tmp = NULL;
+
+	return ret;
 }
 
 static void create_bit_buttons(GtkWidget *pane)
