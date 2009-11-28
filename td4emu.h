@@ -36,6 +36,8 @@ typedef enum {
 	true,
 } bool;
 
+#define IO_PORT_BIT_SIZE 4
+
 // td4emu.c
 int start_emulation(char *file);
 
