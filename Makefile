@@ -13,6 +13,7 @@ objs = main.o \
 	state_machine.o \
 	td4_decoder.o \
 	xmalloc.o \
+	td4_utils.o \
 	td4_abort.o
 
 $(target): $(objs)

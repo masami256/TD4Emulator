@@ -1,6 +1,10 @@
 #include <gtk/gtk.h>
+#include <glib/gprintf.h>
 
 #include "td4emu.h"
+#include "td4_utils.h"
+#include "state_machine.h"
+#include "td4_decoder.h"
 
 enum {
 	IN_PORT = 0,
@@ -33,6 +37,8 @@ struct td4_info_widgets {
 };
 static struct td4_info_widgets widgets;
 
+static struct td4_state *state;
+
 static void show_dialog(GtkWidget *widget, gchar *msg)
 {
 	GtkWidget *dialog;
@@ -51,6 +57,9 @@ static void show_dialog(GtkWidget *widget, gchar *msg)
 
 static void destroy(GtkWidget *widget, gpointer data)
 {
+	cleanup_opcode_table();
+	cleanup_state(state);
+
 	gtk_main_quit();
 }
 
@@ -60,16 +69,88 @@ static gboolean on_set_clock(GtkWidget *widget, gpointer data)
 	return TRUE;
 }
 
+static u_int8_t convert_bin2dec(int idx)
+{
+	struct check_btns btns = widgets.bit_btns[idx];
+	int i;
+	char data[8] = { 0 };
+	
+	for (i = 0; i < sizeof(data); i++)
+		data[i] = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btns.bit[i])) ? 1 : 0;
+
+	return bin2dec(data, 8);
+}
+
+static inline void set_bit_data(char *out, int data)
+{
+	int i, j;
+
+	for (i = 0, j = 3; i < 4; i++, j--) 
+		out[j] = (data >> i) & 1 ? '1' : '0';
+
+}
+
+static void show_register_data(GtkWidget *widget, u_int8_t data)
+{
+	char tmp[4 + 1] = { 0 };
+
+	set_bit_data(tmp, data);
+	gtk_label_set_text(GTK_LABEL(widget), tmp);
+}
+
+static void show_carry_flag(GtkWidget *widget, u_int8_t data)
+{
+	char tmp[16] ={ 0 };
+	g_sprintf(tmp, "%d", data);
+	gtk_label_set_text(GTK_LABEL(widget), tmp);
+}
+
+static void show_io_port_data(struct io_ports_btns *btns)
+{
+	int i, j;
+	char data[IO_PORT_BIT_SIZE + 1] = { 0 };
+
+	set_bit_data(data, state->io->out_port);
+	for (i = IO_PORT_BIT_SIZE - 1, j = 0; i >= 0; i--, j++)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->bit[i]), data[j] == '1' ? TRUE : FALSE);
+}
+
+
+static void show_data(void)
+{
+	show_register_data(widgets.reg_a, state->acc->reg_a);
+	show_register_data(widgets.reg_b, state->acc->reg_b);
+	show_carry_flag(widgets.c_flag, state->flags->carry);
+	show_io_port_data(&widgets.out_port_btns);
+}
+
 static gboolean on_execute(GtkWidget *widget, gpointer data)
 {
-	show_dialog(widget, "on execute");
-	gtk_label_set_text(GTK_LABEL(widgets.reg_a), "AAAA");
+	int i = 0;
+
+	// first, read all memory data.
+	for (i = 0; i < ADDRESS_SPACE_SIZE; i++) 
+		state->memory[i] = convert_bin2dec(i);
+
+	// decode and execute instructions.
+	while (get_ip(state) < ADDRESS_SPACE_SIZE) {
+		parse_opecode(state, fetch(state));
+		g_print("ip:0x%02x A:0x%02x B:0x%02x C:0x%02x\n", state->ip, 
+			state->acc->reg_a, state->acc->reg_b, state->flags->carry);
+
+		show_data();
+	}       
+	
+	reset_state(state);
+
 	return TRUE;
 }
 
 static gboolean on_reset(GtkWidget *widget, gpointer data)
 {
 	show_dialog(widget, "on reset");
+	reset_state(state);
+
 	return TRUE;
 }
 
@@ -266,7 +347,11 @@ static void create_window(void)
 	create_bit_btns(rvbox);
 	
 	gtk_widget_show_all(widgets.window);
-	
+
+	// initialize td4 registers and data
+	init_opcode_table();
+	state = init_state();
+
 	gtk_main();
 
 }

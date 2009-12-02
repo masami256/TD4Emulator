@@ -15,12 +15,12 @@ inline u_int8_t get_carry_flag(struct td4_state *state)
 	return state->flags->carry;
 }
 
-static inline u_int8_t fetch(struct td4_state *state)
+inline u_int8_t fetch(struct td4_state *state)
 {
 	return state->memory[state->ip];
 }
 
-static inline u_int8_t get_ip(struct td4_state *state)
+inline u_int8_t get_ip(struct td4_state *state)
 {
 	return state->ip;
 }

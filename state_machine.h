@@ -10,6 +10,8 @@ void *decoder(struct td4_state *state);
 inline void set_carry_flag(struct td4_state *state, u_int8_t flg);
 inline u_int8_t get_carry_flag(struct td4_state *state);
 inline void set_ip(struct td4_state *state, u_int8_t val);
+inline u_int8_t get_ip(struct td4_state *state);
 inline void inrement_ip(struct td4_state *state);
+inline u_int8_t fetch(struct td4_state *state);
 
 #endif // STATE_MACHONE_H
