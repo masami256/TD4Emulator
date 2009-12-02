@@ -75,7 +75,7 @@ static u_int8_t convert_bin2dec(int idx)
 	int i;
 	char data[8] = { 0 };
 	
-	for (i = 0; i < sizeof(data); i++)
+ 	for (i = 0; i < sizeof(data); i++)
 		data[i] = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btns.bit[i])) ? 1 : 0;
 
 	return bin2dec(data, 8);
@@ -124,6 +124,18 @@ static void show_data(void)
 	show_io_port_data(&widgets.out_port_btns);
 }
 
+static void read_in_port(void)
+{
+	int i;
+	char data[IO_PORT_BIT_SIZE] = { 0 };
+
+	for (i = 0; i < sizeof(data); i++)
+		data[i] = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widgets.in_port_btns.bit[i])) ? 1 : 0;
+
+	state->io->in_port = bin2dec(data, IO_PORT_BIT_SIZE);
+	
+}
+
 static gboolean on_execute(GtkWidget *widget, gpointer data)
 {
 	int i = 0;
@@ -132,11 +144,16 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 	for (i = 0; i < ADDRESS_SPACE_SIZE; i++) 
 		state->memory[i] = convert_bin2dec(i);
 
+	// read IN port data.
+	read_in_port();
+
 	// decode and execute instructions.
 	while (get_ip(state) < ADDRESS_SPACE_SIZE) {
 		parse_opecode(state, fetch(state));
-		g_print("ip:0x%02x A:0x%02x B:0x%02x C:0x%02x\n", state->ip, 
-			state->acc->reg_a, state->acc->reg_b, state->flags->carry);
+		g_print("A:0x%02x B:0x%02x C:0x%02x\nPC:0x%02x\nIN:0x%02x OUT:0x%02x\n",
+			state->acc->reg_a, state->acc->reg_b, state->flags->carry,
+			get_ip(state),
+			state->io->in_port, state->io->out_port);
 
 		show_data();
 	}       
