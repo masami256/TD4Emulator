@@ -9,5 +9,6 @@ test/test_jnc
 test/test_in
 test/test_out
 test/test_decoder
+test/test_bin2dec
 test/core
 
