@@ -21,7 +21,7 @@ struct io_ports_btns {
 
 struct clock_info {
 	GtkWidget *radio[3];
-	gchar *clock;
+	GtkWidget *entry;;
 };
 
 struct td4_info_widgets {
@@ -34,26 +34,11 @@ struct td4_info_widgets {
 	struct io_ports_btns in_port_btns;
 	struct io_ports_btns out_port_btns;
 	struct clock_info clock;
+	GtkWidget *text;
 };
 static struct td4_info_widgets widgets;
 
 static struct td4_state *state;
-
-static void show_dialog(GtkWidget *widget, gchar *msg)
-{
-	GtkWidget *dialog;
-
-	dialog = gtk_message_dialog_new(GTK_WINDOW(widgets.window),
-					GTK_DIALOG_MODAL,
-					GTK_MESSAGE_INFO,
-					GTK_BUTTONS_OK,
-					msg);
-
-	gtk_dialog_run(GTK_DIALOG(dialog));
-
-	gtk_widget_destroy(dialog);
-
-}
 
 static void destroy(GtkWidget *widget, gpointer data)
 {
@@ -61,12 +46,6 @@ static void destroy(GtkWidget *widget, gpointer data)
 	cleanup_state(state);
 
 	gtk_main_quit();
-}
-
-static gboolean on_set_clock(GtkWidget *widget, gpointer data)
-{
-	show_dialog(widget, "on set clock");
-	return TRUE;
 }
 
 static u_int8_t convert_bin2dec(int idx)
@@ -165,7 +144,6 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 
 static gboolean on_reset(GtkWidget *widget, gpointer data)
 {
-	show_dialog(widget, "on reset");
 	reset_state(state);
 
 	return TRUE;
@@ -297,7 +275,6 @@ static void create_clock_box(GtkWidget *pane)
 	GtkWidget *label = gtk_label_new("\nClock Generator");
 	GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 	GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
-	GtkWidget *set_btn;
 
 	widgets.clock.radio[0] = gtk_radio_button_new_with_label(group, "1HZ");
 	widgets.clock.radio[1] = gtk_radio_button_new_with_label_from_widget(
@@ -306,16 +283,19 @@ static void create_clock_box(GtkWidget *pane)
 	widgets.clock.radio[2] = gtk_radio_button_new_with_label_from_widget(
 		GTK_RADIO_BUTTON(widgets.clock.radio[1]), "Manual");
 
-	set_btn = gtk_button_new_with_label("Set Clock");
-	g_signal_connect (G_OBJECT (set_btn), "clicked",
-			  G_CALLBACK (on_set_clock), NULL);
-
 	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);	
 	gtk_box_pack_start(GTK_BOX(vbox), widgets.clock.radio[0], FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), widgets.clock.radio[1], FALSE, FALSE, 0);
 
+
+	label = gtk_label_new("HZ");
+	widgets.clock.entry = gtk_entry_new_with_max_length(2);
+	gtk_entry_set_text(GTK_ENTRY(widgets.clock.entry), "10");
+	gtk_widget_set_size_request(widgets.clock.entry, 30, 20);	
+
 	gtk_box_pack_start(GTK_BOX(hbox), widgets.clock.radio[2], FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), set_btn, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), widgets.clock.entry, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	gtk_box_pack_start(GTK_BOX(pane), vbox, FALSE, FALSE, 0);
@@ -358,7 +338,7 @@ static void create_window(void)
 
 	gtk_box_pack_end(GTK_BOX(lvbox), execute, FALSE, FALSE, 0);
 	gtk_box_pack_end(GTK_BOX(lvbox), reset, FALSE, FALSE, 0);	
-
+	
 	rvbox = gtk_vbox_new(FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(hbox), rvbox, FALSE, FALSE, 0);
 	create_bit_btns(rvbox);
