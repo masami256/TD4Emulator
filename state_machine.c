@@ -37,8 +37,15 @@ inline void inrement_ip(struct td4_state *state)
 
 void *decoder(struct td4_state *state)
 {
-	while (get_ip(state) < ADDRESS_SPACE_SIZE) 
-		parse_opecode(state, fetch(state));
+	int ret;
+	while (1) {
+		ret = parse_opecode(state, fetch(state));
+		if (ret)
+			inrement_ip(state);
+
+		if (get_ip(state) >= ADDRESS_SPACE_SIZE)
+			break;
+	}
 
 	return NULL;
 }

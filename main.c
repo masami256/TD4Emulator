@@ -163,6 +163,7 @@ static unsigned int get_hz_setting(void)
 static gboolean on_execute(GtkWidget *widget, gpointer data)
 {
 	int i = 0;
+	int ret = 0;
 	unsigned int usec;
 
 	// get HZ setting.
@@ -192,8 +193,14 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 	read_in_port();
 
 	// decode and execute instructions.
-	while (get_ip(state) < ADDRESS_SPACE_SIZE) {
-		parse_opecode(state, fetch(state));
+	while (1) {
+	       
+		ret = parse_opecode(state, fetch(state));
+		if (ret)
+			inrement_ip(state);
+
+		if (get_ip(state) >= ADDRESS_SPACE_SIZE)
+			break;
 
 		g_print("A:0x%02x B:0x%02x C:0x%02x\nPC:0x%02x\nIN:0x%02x OUT:0x%02x\n",
 			state->acc->reg_a, state->acc->reg_b, state->flags->carry,
@@ -201,6 +208,7 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 			state->io->in_port, state->io->out_port);
 
 		show_data();
+
 		usleep(usec);
 	}       
 	

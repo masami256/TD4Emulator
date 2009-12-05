@@ -249,8 +249,6 @@ bool parse_opecode(struct td4_state *state, u_int8_t data)
 	// op should already be between 0 to 0xf.
 	// it doesn't need to check its range.
 	ret = op_table[op].op->func(state, im);
-	if (ret)
-		inrement_ip(state);
 
 	return ret;
 }
