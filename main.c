@@ -1,10 +1,16 @@
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "td4emu.h"
 #include "td4_utils.h"
 #include "state_machine.h"
 #include "td4_decoder.h"
+
+#define DEFAULT_HZ "10"
+#define USEC 1000000
 
 enum {
 	IN_PORT = 0,
@@ -34,7 +40,6 @@ struct td4_info_widgets {
 	struct io_ports_btns in_port_btns;
 	struct io_ports_btns out_port_btns;
 	struct clock_info clock;
-	GtkWidget *text;
 };
 static struct td4_info_widgets widgets;
 
@@ -115,9 +120,58 @@ static void read_in_port(void)
 	
 }
 
+static unsigned int get_hz_setting_from_entry(void)
+{
+	const gchar *text = gtk_entry_get_text(GTK_ENTRY(widgets.clock.entry));
+	unsigned int ret = 0;
+	int len = strlen(text);
+
+	if (len != strspn(text, "0123456789"))
+		return 0;
+
+	ret = (unsigned int) atoi(text);
+	if (ret == 0 || ret > 1000)
+		return 0;
+
+	return ret;
+}
+
+static unsigned int get_hz_setting(void)
+{
+	unsigned int ret = 0;
+
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widgets.clock.radio[0]))) {
+		ret = 1;
+	} else if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widgets.clock.radio[1]))) {
+		ret = 10;
+	} else {
+		ret = get_hz_setting_from_entry();
+	}
+
+	return (ret != 0) ? USEC / ret : 0;
+
+}
+
 static gboolean on_execute(GtkWidget *widget, gpointer data)
 {
 	int i = 0;
+	unsigned int usec;
+
+	// get HZ setting.
+	usec = get_hz_setting();
+	if (!usec) {
+		GtkWidget *d = gtk_message_dialog_new(GTK_WINDOW(widgets.window),
+				       GTK_DIALOG_MODAL,
+				       GTK_MESSAGE_WARNING,
+				       GTK_BUTTONS_CLOSE,
+				       "HZ should be between 1 to 1000");
+
+		gtk_dialog_run(GTK_DIALOG(d));
+		gtk_widget_destroy(d);
+		return FALSE ;
+	}
+
+	g_print("HZ setting is %uHZ\n", usec);
 
 	// first, read all memory data.
 	for (i = 0; i < ADDRESS_SPACE_SIZE; i++) 
@@ -135,6 +189,7 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 			state->io->in_port, state->io->out_port);
 
 		show_data();
+		usleep(usec);
 	}       
 	
 	reset_state(state);
@@ -144,7 +199,32 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 
 static gboolean on_reset(GtkWidget *widget, gpointer data)
 {
+	int i, j;
+
+	// reset TD4 registers, carry flag, IP, and memory.
 	reset_state(state);
+
+	// reset io port
+	for (i = 0; i < IO_PORT_BIT_SIZE; i++) {
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widgets.in_port_btns.bit[i]), FALSE);
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widgets.out_port_btns.bit[i]), FALSE);
+	}
+
+	// reset memory
+	for (i = 0; i < ADDRESS_SPACE_SIZE; i++) {
+		for (j = 7; j >= 0; j--) 
+			gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widgets.bit_btns[i].bit[j]), FALSE);
+	}
+
+	// reset clock.
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widgets.clock.radio[0]), TRUE);
+	gtk_entry_set_text(GTK_ENTRY(widgets.clock.entry), DEFAULT_HZ);
+
+	// 
+	gtk_label_set_text(GTK_LABEL(widgets.reg_a), "0000");
+	gtk_label_set_text(GTK_LABEL(widgets.reg_b), "0000");
+	gtk_label_set_text(GTK_LABEL(widgets.c_flag), "0");
+	gtk_label_set_text(GTK_LABEL(widgets.counter), "0x00");
 
 	return TRUE;
 }
@@ -289,8 +369,8 @@ static void create_clock_box(GtkWidget *pane)
 
 
 	label = gtk_label_new("HZ");
-	widgets.clock.entry = gtk_entry_new_with_max_length(2);
-	gtk_entry_set_text(GTK_ENTRY(widgets.clock.entry), "10");
+	widgets.clock.entry = gtk_entry_new_with_max_length(4);
+	gtk_entry_set_text(GTK_ENTRY(widgets.clock.entry), DEFAULT_HZ);
 	gtk_widget_set_size_request(widgets.clock.entry, 30, 20);	
 
 	gtk_box_pack_start(GTK_BOX(hbox), widgets.clock.radio[2], FALSE, FALSE, 0);
