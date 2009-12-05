@@ -192,7 +192,17 @@ int test_decoder_jnc(struct td4_state *state)
 			b = false;
 	}
 	print_result(b, "DECODER JNC Test001");
-	printf("%d\n", state->acc->reg_b);
+	return 0;
+}
+
+int test_decoder_no_instruction(struct td4_state *state)
+{
+	state = reset_state(state);
+
+	state->memory[0] = 0x62;
+	decoder(state);
+	print_result(true, "DECODER no instruction Test001");
+
 	return 0;
 }
 
@@ -205,6 +215,8 @@ int test_decoder(void)
 
 	test_decoder_jmp(state);
 	test_decoder_jnc(state);
+
+	test_decoder_no_instruction(state);
 
 	cleanup_state(state);
 
