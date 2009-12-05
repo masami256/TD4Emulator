@@ -45,6 +45,14 @@ static struct td4_info_widgets widgets;
 
 static struct td4_state *state;
 
+static void reset_labels(void)
+{
+	gtk_label_set_label(GTK_LABEL(widgets.reg_a), "0000");
+	gtk_label_set_label(GTK_LABEL(widgets.reg_b), "0000");
+	gtk_label_set_label(GTK_LABEL(widgets.c_flag), "0");
+	gtk_label_set_label(GTK_LABEL(widgets.counter), "0x00");
+}
+
 static void destroy(GtkWidget *widget, gpointer data)
 {
 	cleanup_opcode_table();
@@ -84,9 +92,9 @@ static void show_register_data(GtkWidget *widget, u_int8_t data)
 
 static void show_carry_flag(GtkWidget *widget, u_int8_t data)
 {
-	char tmp[16] ={ 0 };
-	g_sprintf(tmp, "%d", data);
-	gtk_label_set_text(GTK_LABEL(widget), tmp);
+	char c[2] = { 0 };
+	c[0] = get_carry_flag(state) ? '1' : '0';
+	gtk_label_set_text(GTK_LABEL(widget), c);
 }
 
 static void show_io_port_data(struct io_ports_btns *btns)
@@ -171,6 +179,9 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 		return FALSE ;
 	}
 
+	// reset labels
+	reset_labels();
+
 	g_print("HZ setting is %uHZ\n", usec);
 
 	// first, read all memory data.
@@ -183,6 +194,7 @@ static gboolean on_execute(GtkWidget *widget, gpointer data)
 	// decode and execute instructions.
 	while (get_ip(state) < ADDRESS_SPACE_SIZE) {
 		parse_opecode(state, fetch(state));
+
 		g_print("A:0x%02x B:0x%02x C:0x%02x\nPC:0x%02x\nIN:0x%02x OUT:0x%02x\n",
 			state->acc->reg_a, state->acc->reg_b, state->flags->carry,
 			get_ip(state),
@@ -220,11 +232,8 @@ static gboolean on_reset(GtkWidget *widget, gpointer data)
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widgets.clock.radio[0]), TRUE);
 	gtk_entry_set_text(GTK_ENTRY(widgets.clock.entry), DEFAULT_HZ);
 
-	// 
-	gtk_label_set_text(GTK_LABEL(widgets.reg_a), "0000");
-	gtk_label_set_text(GTK_LABEL(widgets.reg_b), "0000");
-	gtk_label_set_text(GTK_LABEL(widgets.c_flag), "0");
-	gtk_label_set_text(GTK_LABEL(widgets.counter), "0x00");
+	// reset labels
+	reset_labels();
 
 	return TRUE;
 }
